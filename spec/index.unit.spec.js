@@ -142,12 +142,36 @@ describe('wallet', function () {
     });
   });
 
-  describe('activate', function () {
-    it('should be able to activate wallet');
+  describe('verify', function () {
+    let pin;
+    before(function (done) {
+      redis.clear(done);
+    });
+
+    before(function (done) {
+      wallet.create(phoneNumber, function (error, _wallet) {
+        pin = _wallet.pin;
+        done(error, _wallet);
+      });
+    });
+
+    it('should be able to send verification code');
+    it(
+      'should be able to accept verification code to verify wallet',
+      function (done) {
+        wallet.verify({ phoneNumber, pin }, function (error, _wallet) {
+          done(error, _wallet);
+        });
+      });
+
+    after(function (done) {
+      redis.clear(done);
+    });
+
   });
 
-  describe('verify', function () {
-    it('should be able to verify wallet');
+  describe('activate', function () {
+    it('should be able to activate wallet');
   });
 
 
@@ -158,14 +182,6 @@ describe('wallet', function () {
     it(
       'should be able to index wallet using reds atomically during save'
     );
-  });
-
-  describe('verify', function () {
-    before(function (done) {
-      redis.clear(done);
-    });
-    it('should be able to send verification code');
-    it('should be able to accept verification to verify wallet');
   });
 
   describe('deposit', function () {

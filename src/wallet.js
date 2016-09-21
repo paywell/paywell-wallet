@@ -426,6 +426,10 @@ exports.create = function (phoneNumber, done) {
 
 };
 
+exports.update = function () {
+  // TODO update update timestamp
+};
+
 
 /**
  * @function
@@ -451,14 +455,66 @@ exports.search = function (query, done) {
 
 };
 
-exports.update = function () {
-  // TODO update update timestamp
-};
-
 exports.activate = function () {
   // body...
 };
 
-exports.verify = function () {
-  // body...
+
+/**
+ * @function
+ * @name verify
+ * @param  {String}   options.phoneNumber  verify given wallet using its pin
+ * @param  {String}   options.pin  wallet pin code
+ * @param  {Function} done a callback to invoke on success or failure
+ * @return {Object|Error}        wallet or error
+ * @since 0.1.0
+ * @public
+ */
+exports.verify = function (options, done) {
+  //ensure options
+  options = _.merge({}, options);
+
+  async.waterfall([
+
+    function ensureOptions(next) {
+      const isValidOptions = !!options.pin && !!options.phoneNumber;
+      if (!isValidOptions) {
+        let error = new Error('Invalid Verification Details');
+        error.status = 400;
+        //TODO set error code
+        next(error);
+      } else {
+        next(null, options);
+      }
+    },
+
+    function getWallet(options, next) {
+      exports.get(options.phoneNumber, function (error, _wallet) {
+        next(error, _wallet, options);
+      });
+    },
+
+    function verifyPin(_wallet, options, next) {
+      const isValidPin = !!_wallet && !!_wallet.pin &&
+        _wallet.pin === options.pin;
+
+      //update wallet
+      if (isValidPin) {
+        _wallet = _.merge({}, _wallet, {
+          verifiedAt: new Date(),
+          updatedAt: new Date()
+        });
+
+        exports.update(_wallet, next);
+      }
+
+      //create new wallet
+      else {
+        exports.create(options.phoneNumber, next);
+      }
+    }
+
+  ], function (error, _wallet) {
+    done(error, _wallet);
+  });
 };
