@@ -125,6 +125,14 @@ describe('wallet', function () {
     it('should be able to initialize wallet total transfer count');
   });
 
+  describe('activate', function () {
+    it('should be able to activate wallet');
+  });
+
+  describe('verify', function () {
+    it('should be able to verify wallet');
+  });
+
   describe('get', function () {
     before(function (done) {
       redis.clear(done);

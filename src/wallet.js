@@ -264,7 +264,65 @@ exports.lock = function (phoneNumber, options, done) {
 
 /**
  * @function
- * @name save
+ * @name get
+ * @description get wallet(s)
+ * @param  {String,String[]}   phoneNumber valid wallet phone number(s)
+ * @param  {Function} done a callback to invoke on success or failure
+ * @return {Object|Object[]}        collection or single wallets
+ * @since 0.1.0
+ * @public
+ */
+exports.get = function (phoneNumber, done) {
+
+  //get specific wallet(s)
+  const client = exports.redis;
+
+  async.waterfall([
+
+    function ensureWalletKey(next) {
+      //prepare phone numbers collection
+      let keys = [].concat(phoneNumber);
+      //convert wallet phone numbers to wallet keys
+      keys = _.map(keys, function (_phoneNumber) {
+        return function (then) {
+          exports.key(_phoneNumber, then);
+        };
+      });
+      async.parallel(keys, next);
+    },
+
+    function getWallet(keys, next) {
+      console.log(keys);
+      client.hash.get(keys, next);
+    },
+
+    function deserializeWallet(wallets, next) {
+
+      //deserialize wallets
+      if (_.isArray(wallets)) {
+        wallets = _.map(wallets, function (wallet) {
+          wallet = exports.deserialize(wallet);
+          return wallet;
+        });
+      }
+
+      //deserialize wallet
+      else {
+        wallets = exports.deserialize(wallets);
+      }
+
+      next(null, wallets);
+    }
+  ], function (error, wallets) {
+    done(error, wallets);
+  });
+
+};
+
+
+/**
+ * @function
+ * @name create
  * @description persist a given wallet into redis
  * @param  {Object}   wallet valid paywell wallet
  * @param  {Function} done    a callback to invoke on success or failure
@@ -272,7 +330,8 @@ exports.lock = function (phoneNumber, options, done) {
  * @since 0.1.0
  * @public
  */
-exports.save = exports.create = function (phoneNumber, done) {
+exports.create = function (phoneNumber, done) {
+  //TODO ensure paywell-redis index wallet in background
 
   //prepare save options
   const options = {
@@ -286,8 +345,21 @@ exports.save = exports.create = function (phoneNumber, done) {
 
   async.waterfall([
 
-    function ensureDefaults(next) {
-      const wallet = _.merge({}, {
+    function ensureNotExists(next) {
+      exports.get(phoneNumber, function (error, wallet) {
+        //ensure wallet not exist
+        const alreadyExist = !!wallet && !!wallet.activatedAt;
+        if (alreadyExist) {
+          error = new Error('Wallet Already Exist ' + phoneNumber);
+          error.status = 400;
+          // TODO set error code
+        }
+        next(error, wallet);
+      });
+    },
+
+    function ensureDefaults(wallet, next) {
+      wallet = _.merge({}, {
         balance: 0,
         phoneNumber: phoneNumber,
         createdAt: new Date(),
@@ -356,50 +428,6 @@ exports.save = exports.create = function (phoneNumber, done) {
 
 /**
  * @function
- * @name get
- * @description get wallet(s)
- * @param  {String,String[]}   phoneNumber valid wallet phone number(s)
- * @param  {Function} done a callback to invoke on success or failure
- * @return {Object|Object[]}        collection or single wallets
- * @since 0.1.0
- * @public
- */
-exports.get = function (phoneNumber, done) {
-
-  //get specific wallet(s)
-  const client = exports.redis;
-  client.hash.get(phoneNumber, function (error, wallets) {
-    //process wallet collection
-    if (_.isArray(wallets)) {
-      //deserialize dates
-      wallets = _.map(wallets, function (wallet) {
-        wallet = _.merge({}, wallet, {
-          createdAt: Date(wallet.createdAt),
-          updatedAt: Date(wallet.updatedAt),
-          deletedAt: Date(wallet.deletedAt)
-        });
-        return wallet;
-      });
-    }
-
-    //process single wallet
-    else {
-      //deserialize dates
-      wallets = _.merge({}, wallets, {
-        createdAt: Date(wallets.createdAt),
-        updatedAt: Date(wallets.updatedAt),
-        deletedAt: Date(wallets.deletedAt)
-      });
-    }
-
-    done(error, wallets);
-  });
-
-};
-
-
-/**
- * @function
  * @name search
  * @description free text search receipt(s)
  * @param  {String}   query a search string
@@ -423,45 +451,10 @@ exports.search = function (query, done) {
 };
 
 
-/**
- * @function
- * @name get
- * @description get receipt(s)
- * @param  {String,String[]}   keys valid receipt(s) key(s)
- * @param  {Function} done a callback to invoke on success or failure
- * @return {Object|Object[]}        collection or single receipt
- * @since 0.1.0
- * @public
- */
-exports.get = function (keys, done) {
-
-  //get specific receipt(s)
-  const client = exports.redis;
-  client.hash.get(keys, function (error, receipts) {
-    //process receipt collection
-    if (_.isArray(receipts)) {
-      //map receivedAt to date
-      receipts = _.map(receipts, function (receipt) {
-        receipt = _.merge({}, receipt, {
-          receivedAt: Date(receipt.receivedAt)
-        });
-        return receipt;
-      });
-    }
-
-    //process single receipt
-    else {
-      receipts = _.merge({}, receipts, {
-        receivedAt: Date(receipts.receivedAt)
-      });
-    }
-
-    done(error, receipts);
-  });
-
+exports.activate = function () {
+  // body...
 };
 
-exports.generatePaycode = function (phoneNumber, done) {
-  // TODO implement
-  done();
+exports.verify = function () {
+  // body...
 };
