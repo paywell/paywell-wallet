@@ -173,6 +173,7 @@ describe('wallet', function () {
       redis.clear(done);
     });
     it('should be able to deposit cash');
+    it('should be able to obtain wallet deposit timeline');
   });
 
   describe('withdraw', function () {
@@ -180,6 +181,7 @@ describe('wallet', function () {
       redis.clear(done);
     });
     it('should be able to withdraw cash');
+    it('should be able to obtain wallet withdraw timeline');
   });
 
   describe('transfer', function () {
@@ -187,6 +189,7 @@ describe('wallet', function () {
       redis.clear(done);
     });
     it('should be able to transfer cash');
+    it('should be able to obtain wallet transfer timeline');
   });
 
   describe('analytics', function () {
