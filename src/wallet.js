@@ -24,6 +24,8 @@ const warlock = require('node-redis-warlock');
 // const kue = require('kue');
 
 //TODO add error codes
+//TODO ensure wallet currency / units
+//TODO ensure precision / decimal points
 
 //default receipt options
 const defaults = {
