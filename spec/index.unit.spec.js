@@ -36,10 +36,15 @@ describe('wallet', function () {
     it(
       'should be able to create wallet key from phone number',
       function (done) {
-        wallet.key('0714999999', function (error, walletKey) {
-          console.log(error);
-          console.log(walletKey);
-          done(error, walletKey);
+        wallet.key('0714999999', function (error, key) {
+          expect(error).to.not.exist;
+          expect(key).to.exist;
+          const parts = key.split(':');
+          expect(parts.length).to.be.equal(3);
+          expect(parts[1]).to.be.equal('wallets');
+          expect(_.startsWith(parts[2], '255')).to.true;
+          expect(parts[2]).to.contains('714999999');
+          done(error, key);
         });
       });
   });

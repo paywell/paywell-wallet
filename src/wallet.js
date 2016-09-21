@@ -109,7 +109,7 @@ exports.toE164 = function (phoneNumber, options, done) {
  * @function
  * @name key
  * @description generate wallet redis storage key
- * @param  {String} phoneNumber valid phone number in E.164 format
+ * @param  {String} phoneNumber valid phone number
  * @return {String}             wallet redis storage key or null
  * @since 0.1.0
  * @public
