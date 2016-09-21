@@ -136,10 +136,50 @@ exports.key = function (phoneNumber, done) {
   });
 };
 
-exports.exists = function (phoneNumber, done) {
-  //TODO implement
-  done();
+
+/**
+ * @function
+ * @name get
+ * @description get wallet(s)
+ * @param  {String,String[]}   phoneNumber valid wallet phone number(s)
+ * @param  {Function} done a callback to invoke on success or failure
+ * @return {Object|Object[]}        collection or single wallets
+ * @since 0.1.0
+ * @public
+ */
+exports.get = function (phoneNumber, done) {
+
+  //get specific wallet(s)
+  const client = exports.redis;
+  client.hash.get(phoneNumber, function (error, wallets) {
+    //process wallet collection
+    if (_.isArray(wallets)) {
+      //deserialize dates
+      wallets = _.map(wallets, function (wallet) {
+        wallet = _.merge({}, wallet, {
+          createdAt: Date(wallet.createdAt),
+          updatedAt: Date(wallet.updatedAt),
+          deletedAt: Date(wallet.deletedAt)
+        });
+        return wallet;
+      });
+    }
+
+    //process single wallet
+    else {
+      //deserialize dates
+      wallets = _.merge({}, wallets, {
+        createdAt: Date(wallets.createdAt),
+        updatedAt: Date(wallets.updatedAt),
+        deletedAt: Date(wallets.deletedAt)
+      });
+    }
+
+    done(error, wallets);
+  });
+
 };
+
 
 /**
  * @function
