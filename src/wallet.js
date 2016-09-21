@@ -294,7 +294,6 @@ exports.get = function (phoneNumber, done) {
     },
 
     function getWallet(keys, next) {
-      console.log(keys);
       client.hash.get(keys, next);
     },
 
@@ -452,6 +451,9 @@ exports.search = function (query, done) {
 
 };
 
+exports.update = function () {
+  // TODO update update timestamp
+};
 
 exports.activate = function () {
   // body...

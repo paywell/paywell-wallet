@@ -6,6 +6,7 @@ const _ = require('lodash');
 const expect = require('chai').expect;
 const redis = require('paywell-redis')();
 const wallet = require(path.join(__dirname, '..'))();
+const phoneNumber = '0714999999';
 
 describe('wallet', function () {
 
@@ -22,12 +23,12 @@ describe('wallet', function () {
     it(
       'should be able to convert phone number into E.164 format',
       function (done) {
-        wallet.toE164('0714999999', function (error, phoneNumber) {
+        wallet.toE164(phoneNumber, function (error, _phoneNumber) {
           expect(error).to.not.exist;
-          expect(phoneNumber).to.exist;
-          expect(_.startsWith(phoneNumber, '+255')).to.be.true;
-          expect(phoneNumber).to.contains('714999999');
-          done(error, phoneNumber);
+          expect(_phoneNumber).to.exist;
+          expect(_.startsWith(_phoneNumber, '+255')).to.be.true;
+          expect(_phoneNumber).to.contains('714999999');
+          done(error, _phoneNumber);
         });
       });
   });
@@ -36,7 +37,7 @@ describe('wallet', function () {
     it(
       'should be able to create wallet key from phone number',
       function (done) {
-        wallet.key('0714999999', function (error, key) {
+        wallet.key(phoneNumber, function (error, key) {
           expect(error).to.not.exist;
           expect(key).to.exist;
           const parts = key.split(':');
@@ -69,7 +70,7 @@ describe('wallet', function () {
     });
 
     it('should be able to lock wallet', function (done) {
-      wallet.lock('0714999999', {
+      wallet.lock(phoneNumber, {
         ttl: 20000
       }, function (error, _unlock) {
         expect(error).to.not.exist;
@@ -83,7 +84,7 @@ describe('wallet', function () {
     it(
       'should not be able to obtain lock if previous lock have not released',
       function (done) {
-        wallet.lock('0714999999', {
+        wallet.lock(phoneNumber, {
           ttl: 20000
         }, function (error, _unlock) {
           expect(error).to.exist;
@@ -101,6 +102,7 @@ describe('wallet', function () {
   });
 
   describe('create', function () {
+    let newWallet;
     before(function (done) {
       redis.clear(done);
     });
@@ -108,21 +110,36 @@ describe('wallet', function () {
     it(
       'should be able to create wallet',
       function (done) {
-        const phoneNumber = '0714999999';
         wallet.create(phoneNumber, function (error, _wallet) {
-          console.log(error);
-          console.log(_wallet);
+          expect(error).to.not.exist;
+          expect(_wallet).to.exist;
+          expect(_wallet.phoneNumber).to.exist;
+          expect(_wallet.pin).to.exist;
+          expect(_wallet.createdAt).to.exist;
+          expect(_wallet.updatedAt).to.exist;
+          newWallet = _wallet;
           done(error, _wallet);
         });
       });
 
-    it('should be able to initialize wallet balance');
+    it(
+      'should be able to initialize wallet balance',
+      function () {
+        expect(newWallet.balance).to.exist;
+        expect(newWallet.balance).to.be.equal(0);
+      });
+
     it('should be able to initialize wallet total deposit amount');
     it('should be able to initialize wallet total deposit count');
     it('should be able to initialize wallet total withdraw amount');
     it('should be able to initialize wallet total withdraw count');
     it('should be able to initialize wallet total transfer balance');
     it('should be able to initialize wallet total transfer count');
+    it('should not be able to create same wallet in parallel/cluster');
+
+    after(function (done) {
+      redis.clear(done);
+    });
   });
 
   describe('activate', function () {
@@ -133,13 +150,6 @@ describe('wallet', function () {
     it('should be able to verify wallet');
   });
 
-  describe('get', function () {
-    before(function (done) {
-      redis.clear(done);
-    });
-    it('should be able to get single wallet');
-    it('should be able to get multiple wallets');
-  });
 
   describe('search', function () {
     before(function (done) {
@@ -187,6 +197,8 @@ describe('wallet', function () {
     it('should be able to get wallet with min deposit count');
     it('should be able to get wallet with max deposit amount');
     it('should be able to get wallet with min deposit amount');
+    it('should be able to obtain total wallet count');
+    it('should be able to obtain total wallet count by date');
   });
 
   after(function (done) {
