@@ -82,6 +82,13 @@ describe('wallet', function () {
     it('should be able to transfer cash');
   });
 
+  describe('analytics', function () {
+    it('should be able to get wallet with max deposit count');
+    it('should be able to get wallet with min deposit count');
+    it('should be able to get wallet with max deposit amount');
+    it('should be able to get wallet with min deposit amount');
+  });
+
   after(function (done) {
     redis.clear(done);
   });
