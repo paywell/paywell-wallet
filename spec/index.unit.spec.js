@@ -4,9 +4,14 @@
 const path = require('path');
 const _ = require('lodash');
 const expect = require('chai').expect;
+const redis = require('paywell-redis')();
 const wallet = require(path.join(__dirname, '..'))();
 
 describe('wallet', function () {
+
+  before(function (done) {
+    redis.clear(done);
+  });
 
   it('should be exportable', function () {
     expect(wallet).to.exist;
@@ -25,6 +30,55 @@ describe('wallet', function () {
           done(error, phoneNumber);
         });
       });
+  });
+
+  describe('key', function () {
+    it(
+      'should be able to create wallet key from phone number',
+      function (done) {
+        wallet.key('0714999999', function (error, walletKey) {
+          console.log(error);
+          console.log(walletKey);
+          done(error, walletKey);
+        });
+      });
+  });
+
+  describe('create', function () {
+    before(function (done) {
+      redis.clear(done);
+    });
+
+    it('should be able to create wallet');
+    it('should be able to initialize wallet balance');
+    it('should be able to initialize wallet total deposit');
+    it('should be able to initialize wallet total withdraw');
+    it('should be able to initialize wallet total transfer');
+  });
+
+  describe('deposit', function () {
+    before(function (done) {
+      redis.clear(done);
+    });
+    it('should be able to deposit cash');
+  });
+
+  describe('withdraw', function () {
+    before(function (done) {
+      redis.clear(done);
+    });
+    it('should be able to withdraw cash');
+  });
+
+  describe('transfer', function () {
+    before(function (done) {
+      redis.clear(done);
+    });
+    it('should be able to transfer cash');
+  });
+
+  after(function (done) {
+    redis.clear(done);
   });
 
 });

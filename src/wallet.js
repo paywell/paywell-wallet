@@ -15,6 +15,7 @@
 
 //dependencies
 const _ = require('lodash');
+const async = require('async');
 const redis = require('paywell-redis');
 const phone = require('phone');
 const uuid = require('uuid');
@@ -114,11 +115,25 @@ exports.toE164 = function (phoneNumber, options, done) {
  * @public
  */
 exports.key = function (phoneNumber, done) {
-  try {
-    done(null, phoneNumber);
-  } catch (error) {
-    done(error);
-  }
+  async.waterfall([
+
+    function toE164(next) {
+      exports.toE164(phoneNumber, next);
+    },
+
+    function generateWalletKey(_phoneNumber, next) {
+      //replace leading + in e.164 phone number
+      _phoneNumber = _phoneNumber.replace('+', '');
+      //generate redis storage key
+      const key = exports.redis.key(
+        exports.defaults.collection,
+        _phoneNumber
+      );
+      next(null, key);
+    }
+  ], function (error, _phoneNumber) {
+    done(error, _phoneNumber);
+  });
 };
 
 exports.exists = function (phoneNumber, done) {
