@@ -18,6 +18,7 @@ const _ = require('lodash');
 const async = require('async');
 const redis = require('paywell-redis');
 const phone = require('phone');
+const shortid = require('shortid');
 const uuid = require('uuid');
 
 //default receipt options
@@ -26,7 +27,11 @@ const defaults = {
   redis: {},
   collection: 'wallets',
   queue: 'wallets',
-  country: 'TZ'
+  country: 'TZ',
+  shortid: {
+    worker: 1,
+    seed: 999
+  }
 };
 
 
@@ -53,6 +58,10 @@ exports.init = function () {
   if (!exports.redis) {
     exports.redis = redis(exports.defaults);
   }
+
+  //initialize shortid
+  shortid.worker(exports.defaults.shortid.worker);
+  shortid.seed(exports.defaults.shortid.seed);
 
 };
 

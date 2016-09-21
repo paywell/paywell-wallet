@@ -16,6 +16,19 @@ virtual wallet for paywell
 $ npm install --save paywell-wallet
 ```
 
+## Structure
+```js
+{
+    phoneNumber:String(in E.164),
+    balance:Number,
+    pin:String,
+    createdAt:Date,
+    verifiedAt:Date,
+    updatedAt:Date,
+    deletedAt:Date,
+}
+```
+
 ## Testing
 * Clone this repository
 
