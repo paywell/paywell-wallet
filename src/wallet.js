@@ -321,6 +321,32 @@ exports.get = function (phoneNumber, done) {
 };
 
 
+exports.save = function (wallet, done) {
+  //TODO ensure _id exists
+
+  //prepare save options
+  const options = {
+    collection: exports.defaults.collection,
+    index: true,
+    ignore: ['_id', 'payload']
+  };
+
+  //obtain redis client
+  const client = exports.redis;
+
+  //update timestamps
+  wallet = _.merge({}, wallet, {
+    updatedAt: new Date()
+  });
+
+  //persist wallet
+  client.hash.save(wallet, options, function (error, _wallet) {
+    _wallet = exports.deserialize(_wallet);
+    done(error, _wallet);
+  });
+};
+
+
 /**
  * @function
  * @name create
@@ -333,16 +359,6 @@ exports.get = function (phoneNumber, done) {
  */
 exports.create = function (phoneNumber, done) {
   //TODO ensure paywell-redis index wallet in background
-
-  //prepare save options
-  const options = {
-    collection: exports.defaults.collection,
-    index: true,
-    ignore: ['_id', 'payload']
-  };
-
-  //obtain redis client
-  const client = exports.redis;
 
   async.waterfall([
 
@@ -405,10 +421,7 @@ exports.create = function (phoneNumber, done) {
     },
 
     function saveWallet(wallet, next) {
-      client.hash.save(wallet, options, function (error, _wallet) {
-        _wallet = exports.deserialize(_wallet);
-        next(error, _wallet);
-      });
+      exports.save(wallet, next);
     },
 
     function sendWalletPin(wallet, next) {
@@ -424,10 +437,6 @@ exports.create = function (phoneNumber, done) {
     done(error, wallet);
   });
 
-};
-
-exports.update = function () {
-  // TODO update update timestamp
 };
 
 
@@ -505,7 +514,7 @@ exports.verify = function (options, done) {
           updatedAt: new Date()
         });
 
-        exports.update(_wallet, next);
+        exports.save(_wallet, next);
       }
 
       //create new wallet

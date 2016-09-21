@@ -160,6 +160,9 @@ describe('wallet', function () {
       'should be able to accept verification code to verify wallet',
       function (done) {
         wallet.verify({ phoneNumber, pin }, function (error, _wallet) {
+          expect(error).to.not.exist;
+          expect(_wallet).to.exist;
+          expect(_wallet.pin).to.be.equal(pin);
           done(error, _wallet);
         });
       });
