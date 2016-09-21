@@ -16,6 +16,7 @@
 //dependencies
 const _ = require('lodash');
 const redis = require('paywell-redis');
+const phone = require('phone');
 const uuid = require('uuid');
 
 //default receipt options
@@ -23,7 +24,8 @@ const defaults = {
   prefix: 'paywell',
   redis: {},
   collection: 'wallets',
-  queue: 'wallets'
+  queue: 'wallets',
+  country: 'TZ'
 };
 
 
@@ -56,6 +58,76 @@ exports.init = function () {
 
 /**
  * @function
+ * @name toE164
+ * @description convert phone number to E.164 format
+ * @param  {String} phoneNumber valid phone number
+ * @param  {Object} [options] convertion options
+ * @param  {String} [options.country] valid alpha2 country code. default to
+ *                                    TZS(Tanzania)
+ * @return {String}             phone number in E.164 format or null
+ * @since 0.1.0
+ * @public
+ * @see {@link https://en.wikipedia.org/wiki/E.164|E.164}
+ */
+exports.toE164 = function (phoneNumber, options, done) {
+  //normalize arguments
+  if (options && _.isFunction(options)) {
+    done = options;
+    options = {};
+  }
+
+  //ensure options
+  options = _.merge({}, {
+    country: exports.defaults.country
+  }, options);
+
+  //convert number to E.164
+  try {
+    const parts = phone(phoneNumber, options.country);
+    const isValidPhoneNumber = !parts || parts.length !== 0;
+
+    //return number
+    if (isValidPhoneNumber) {
+      done(null, parts[0]);
+    }
+
+    //throw exception
+    else {
+      let error = new Error('Invalid Phone Number ' + phoneNumber);
+      error.status = 400;
+      done(error);
+    }
+  } catch (error) {
+    done(error);
+  }
+
+};
+
+
+/**
+ * @function
+ * @name key
+ * @description generate wallet redis storage key
+ * @param  {String} phoneNumber valid phone number in E.164 format
+ * @return {String}             wallet redis storage key or null
+ * @since 0.1.0
+ * @public
+ */
+exports.key = function (phoneNumber, done) {
+  try {
+    done(null, phoneNumber);
+  } catch (error) {
+    done(error);
+  }
+};
+
+exports.exists = function (phoneNumber, done) {
+  //TODO implement
+  done();
+};
+
+/**
+ * @function
  * @name save
  * @description persist a given receipt into redis
  * @param  {Object}   receipt valid paywell receipt
@@ -64,7 +136,7 @@ exports.init = function () {
  * @since 0.1.0
  * @public
  */
-exports.save = function (receipt, done) {
+exports.save = exports.create = function (receipt, done) {
 
   //ensure receipt
   receipt = _.merge({}, {
@@ -153,12 +225,6 @@ exports.get = function (keys, done) {
     done(error, receipts);
   });
 
-};
-
-
-exports.exists = function (phoneNumber, done) {
-  //TODO implement
-  done();
 };
 
 exports.getPin = function (phoneNumber, done) {
