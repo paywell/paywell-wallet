@@ -100,6 +100,7 @@ exports.deserialize = function (wallet) {
     createdAt: wallet.createdAt ? new Date(wallet.createdAt) : undefined,
     updatedAt: wallet.updatedAt ? new Date(wallet.updatedAt) : undefined,
     verifiedAt: wallet.verifiedAt ? new Date(wallet.verifiedAt) : undefined,
+    activatedAt: wallet.activatedAt ? new Date(wallet.activatedAt) : undefined,
   });
 
   return wallet;
