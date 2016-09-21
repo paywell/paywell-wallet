@@ -105,11 +105,24 @@ describe('wallet', function () {
       redis.clear(done);
     });
 
-    it('should be able to create wallet');
+    it(
+      'should be able to create wallet',
+      function (done) {
+        const phoneNumber = '0714999999';
+        wallet.create(phoneNumber, function (error, _wallet) {
+          console.log(error);
+          console.log(_wallet);
+          done(error, _wallet);
+        });
+      });
+
     it('should be able to initialize wallet balance');
-    it('should be able to initialize wallet total deposit');
-    it('should be able to initialize wallet total withdraw');
-    it('should be able to initialize wallet total transfer');
+    it('should be able to initialize wallet total deposit amount');
+    it('should be able to initialize wallet total deposit count');
+    it('should be able to initialize wallet total withdraw amount');
+    it('should be able to initialize wallet total withdraw count');
+    it('should be able to initialize wallet total transfer balance');
+    it('should be able to initialize wallet total transfer count');
   });
 
   describe('get', function () {

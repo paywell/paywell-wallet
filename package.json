@@ -51,6 +51,7 @@
     "phone": "git+https://github.com/lykmapipo/phone.git",
     "redis": "^2.6.2",
     "shortid": "^2.2.6",
+    "traverse": "^0.6.6",
     "uuid": "^2.0.2",
     "validator": "^5.6.0"
   },

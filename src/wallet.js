@@ -19,7 +19,7 @@ const async = require('async');
 const redis = require('paywell-redis');
 const phone = require('phone');
 const shortid = require('shortid');
-const uuid = require('uuid');
+// const uuid = require('uuid');
 const warlock = require('node-redis-warlock');
 // const kue = require('kue');
 
@@ -75,6 +75,34 @@ exports.init = function () {
   shortid.worker(exports.defaults.shortid.worker);
   shortid.seed(exports.defaults.shortid.seed);
 
+};
+
+
+/**
+ * @function
+ * @name deserialize
+ * @description traverse wallet and try convert values to their respective
+ *              js type i.e numbers etc
+ * @param  {Object} wallet valid wallet
+ * @return {Object}        object with all nodes converted to their respective
+ *                         js types
+ *
+ * @since 0.3.0
+ * @private
+ */
+exports.deserialize = function (wallet) {
+
+  //ensure wallet
+  wallet = _.merge({}, wallet);
+
+  //convert dates
+  wallet = _.merge({}, wallet, {
+    createdAt: wallet.createdAt ? new Date(wallet.createdAt) : undefined,
+    updatedAt: wallet.updatedAt ? new Date(wallet.updatedAt) : undefined,
+    verifiedAt: wallet.verifiedAt ? new Date(wallet.verifiedAt) : undefined,
+  });
+
+  return wallet;
 };
 
 
@@ -235,6 +263,97 @@ exports.lock = function (phoneNumber, options, done) {
 
 /**
  * @function
+ * @name save
+ * @description persist a given wallet into redis
+ * @param  {Object}   wallet valid paywell wallet
+ * @param  {Function} done    a callback to invoke on success or failure
+ * @return {Object|Error}           valid paywell wallet or error
+ * @since 0.1.0
+ * @public
+ */
+exports.save = exports.create = function (phoneNumber, done) {
+
+  //prepare save options
+  const options = {
+    collection: exports.defaults.collection,
+    index: true,
+    ignore: ['_id', 'payload']
+  };
+
+  //obtain redis client
+  const client = exports.redis;
+
+  async.waterfall([
+
+    function ensureDefaults(next) {
+      const wallet = _.merge({}, {
+        balance: 0,
+        phoneNumber: phoneNumber,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+      next(null, wallet);
+    },
+
+    function ensureE164PhoneNumber(wallet, next) {
+      exports.toE164(wallet.phoneNumber, function (error, e164PhoneNumber) {
+        if (!error && !!e164PhoneNumber) {
+          wallet = _.merge({}, wallet, {
+            phoneNumber: e164PhoneNumber
+          });
+        }
+        next(error, wallet);
+      });
+    },
+
+    function ensureWalletId(wallet, next) {
+      exports.key(wallet.phoneNumber, function (error, key) {
+        if (!error && !!key) {
+          wallet = _.merge({}, wallet, {
+            _id: key
+          });
+        }
+        next(error, wallet);
+      });
+    },
+
+    function ensureWalletPin(wallet, next) {
+      exports.shortid(function (error, pin) {
+        //set wallet pin
+        if (!error && !!pin) {
+          wallet = _.merge({}, wallet, {
+            pin: pin
+          });
+        }
+
+        next(error, wallet);
+      });
+    },
+
+    function saveWallet(wallet, next) {
+      client.hash.save(wallet, options, function (error, _wallet) {
+        _wallet = exports.deserialize(_wallet);
+        next(error, _wallet);
+      });
+    },
+
+    function sendWalletPin(wallet, next) {
+      // TODO queue wallet pin sms send
+      // TODO bill wallet for sent sms
+      // TODO update wallet total sms sent counter
+      // TODO update total sms sent counter
+      next(null, wallet);
+    }
+
+  ], function (error, wallet) {
+    done(error, wallet);
+  });
+
+};
+
+
+/**
+ * @function
  * @name get
  * @description get wallet(s)
  * @param  {String,String[]}   phoneNumber valid wallet phone number(s)
@@ -272,46 +391,6 @@ exports.get = function (phoneNumber, done) {
     }
 
     done(error, wallets);
-  });
-
-};
-
-
-/**
- * @function
- * @name save
- * @description persist a given wallet into redis
- * @param  {Object}   wallet valid paywell wallet
- * @param  {Function} done    a callback to invoke on success or failure
- * @return {Object|Error}           valid paywell wallet or error
- * @since 0.1.0
- * @public
- */
-exports.save = exports.create = function (phoneNumber, done) {
-
-  //ensure wallet
-  let wallet = _.merge({}, {
-    pin: uuid.v1(),
-    createdAt: new Date(),
-    updatedAt: new Date()
-  }, wallet);
-
-  //prepare save options
-  const options = {
-    collection: exports.defaults.collection,
-    index: true,
-    ignore: ['_id', 'payload']
-  };
-
-  const client = exports.redis;
-
-  //set it
-  wallet._id = client.key([options.collection, wallet.uuid]);
-
-  //save wallet
-  client.hash.save(wallet, options, function (error, _wallet) {
-    _wallet.receivedAt = new Date(_wallet.receivedAt);
-    done(error, _wallet);
   });
 
 };
