@@ -216,21 +216,21 @@ exports.get = function (phoneNumber, done) {
 /**
  * @function
  * @name save
- * @description persist a given receipt into redis
- * @param  {Object}   receipt valid paywell receipt
+ * @description persist a given wallet into redis
+ * @param  {Object}   wallet valid paywell wallet
  * @param  {Function} done    a callback to invoke on success or failure
- * @return {Object|Error}           valid paywell receipt or error
+ * @return {Object|Error}           valid paywell wallet or error
  * @since 0.1.0
  * @public
  */
-exports.save = exports.create = function (receipt, done) {
+exports.save = exports.create = function (phoneNumber, done) {
 
-  //ensure receipt
-  receipt = _.merge({}, {
+  //ensure wallet
+  wallet = _.merge({}, {
     pin: uuid.v1(),
     createdAt: new Date(),
     updatedAt: new Date()
-  }, receipt);
+  }, wallet);
 
   //prepare save options
   const options = {
@@ -242,12 +242,12 @@ exports.save = exports.create = function (receipt, done) {
   const client = exports.redis;
 
   //set it
-  receipt._id = client.key([options.collection, receipt.uuid]);
+  wallet._id = client.key([options.collection, wallet.uuid]);
 
-  //save receipt
-  client.hash.save(receipt, options, function (error, _receipt) {
-    _receipt.receivedAt = new Date(_receipt.receivedAt);
-    done(error, _receipt);
+  //save wallet
+  client.hash.save(wallet, options, function (error, _wallet) {
+    _wallet.receivedAt = new Date(_wallet.receivedAt);
+    done(error, _wallet);
   });
 
 };
