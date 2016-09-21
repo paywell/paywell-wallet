@@ -339,6 +339,7 @@ exports.save = exports.create = function (phoneNumber, done) {
 
     function sendWalletPin(wallet, next) {
       // TODO queue wallet pin sms send
+      // TODO save wallet pin sms send for resend
       // TODO bill wallet for sent sms
       // TODO update wallet total sms sent counter
       // TODO update total sms sent counter
