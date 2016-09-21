@@ -120,6 +120,15 @@ describe('wallet', function () {
     it('should be able to get multiple wallets');
   });
 
+  describe('search', function () {
+    before(function (done) {
+      redis.clear(done);
+    });
+    it(
+      'should be able to index wallet using reds atomically during save'
+    );
+  });
+
   describe('verify', function () {
     before(function (done) {
       redis.clear(done);
@@ -157,15 +166,6 @@ describe('wallet', function () {
     it('should be able to get wallet with min deposit count');
     it('should be able to get wallet with max deposit amount');
     it('should be able to get wallet with min deposit amount');
-  });
-
-  describe('search', function () {
-    before(function (done) {
-      redis.clear(done);
-    });
-    it(
-      'should be able to index wallet using reds atomically during save'
-    );
   });
 
   after(function (done) {

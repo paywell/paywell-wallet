@@ -19,7 +19,7 @@ $ npm install --save paywell-wallet
 ## Structure
 ```js
 {
-    phoneNumber:String(in E.164),
+    phoneNumber:String, //in E.164 format
     balance:Number,
     pin:String,
     createdAt:Date,
