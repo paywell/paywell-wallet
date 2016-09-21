@@ -20,7 +20,10 @@ const redis = require('paywell-redis');
 const phone = require('phone');
 const shortid = require('shortid');
 const uuid = require('uuid');
+const warlock = require('node-redis-warlock');
 // const kue = require('kue');
+
+//TODO add error codes
 
 //default receipt options
 const defaults = {
@@ -32,6 +35,9 @@ const defaults = {
   shortid: {
     worker: 1,
     seed: 999
+  },
+  warlock: {
+    ttl: 10000
   }
 };
 
@@ -60,6 +66,11 @@ exports.init = function () {
     exports.redis = redis(exports.defaults);
   }
 
+  //initialize warlock
+  if (!exports.warlock) {
+    exports.warlock = warlock(exports.redis.client());
+  }
+
   //initialize shortid
   shortid.worker(exports.defaults.shortid.worker);
   shortid.seed(exports.defaults.shortid.seed);
@@ -75,6 +86,7 @@ exports.init = function () {
  * @param  {Object} [options] convertion options
  * @param  {String} [options.country] valid alpha2 country code. default to
  *                                    TZS(Tanzania)
+ * @param  {Function} done a callback to invoke on success or failure
  * @return {String}             phone number in E.164 format or null
  * @since 0.1.0
  * @public
@@ -120,6 +132,7 @@ exports.toE164 = function (phoneNumber, options, done) {
  * @name key
  * @description generate wallet redis storage key
  * @param  {String} phoneNumber valid phone number
+ * @param  {Function} done a callback to invoke on success or failure
  * @return {String}             wallet redis storage key or null
  * @since 0.1.0
  * @public
@@ -151,6 +164,7 @@ exports.key = function (phoneNumber, done) {
  * @function
  * @name shortid
  * @description generate unique shortid to be used for wallet pin and paycode
+ * @param  {Function} done a callback to invoke on success or failure
  * @return {String|Error}             shortid or error
  * @since 0.1.0
  * @public
@@ -166,6 +180,56 @@ exports.shortid = function (done) {
   } catch (error) {
     done(error);
   }
+};
+
+
+/**
+ * @function
+ * @name lock
+ * @description lock a wallet for specific ttl
+ * @param  {String}   phoneNumber valid phone number
+ * @param  {Object}   [options]     lock options
+ * @param  {Number}   [options.ttl] lock ttl
+ * @param  {Function} done a callback to invoke on success or failure
+ * @return {Function|Error}               unlock fuction or error
+ * @since 0.1.0
+ * @public
+ */
+exports.lock = function (phoneNumber, options, done) {
+  //normalize arguments
+  if (options && _.isFunction(options)) {
+    done = options;
+    options = {};
+  }
+
+  //ensure options
+  options = _.merge({}, {
+    ttl: exports.defaults.warlock.ttl
+  }, options);
+
+  async.waterfall([
+
+    function generateKey(next) {
+      exports.key(phoneNumber, next);
+    },
+
+    function obtainWalletLock(key, next) {
+      exports.warlock.lock(key, options.ttl, function (error, unlock) {
+        //ensure lock
+        if (!error && !_.isFunction(unlock)) {
+          error = new Error('Missing Wallet Lock');
+          error.status = 400;
+          //ensure lock was not set
+          unlock = undefined;
+          //TODO set error code
+        }
+        next(error, unlock);
+      });
+    }
+
+  ], function (error, unlock) {
+    done(error, unlock);
+  });
 };
 
 
@@ -226,7 +290,7 @@ exports.get = function (phoneNumber, done) {
 exports.save = exports.create = function (phoneNumber, done) {
 
   //ensure wallet
-  wallet = _.merge({}, {
+  let wallet = _.merge({}, {
     pin: uuid.v1(),
     createdAt: new Date(),
     updatedAt: new Date()

@@ -50,6 +50,9 @@ describe('wallet', function () {
   });
 
   describe('shortid', function () {
+    before(function (done) {
+      redis.clear(done);
+    });
     it('should be able to generate shortid', function (done) {
       wallet.shortid(function (error, shortid) {
         expect(error).to.not.exist;
@@ -57,6 +60,44 @@ describe('wallet', function () {
         done(error, shortid);
       });
     });
+  });
+
+  describe('lock', function () {
+    let unlock;
+    before(function (done) {
+      redis.clear(done);
+    });
+
+    it('should be able to lock wallet', function (done) {
+      wallet.lock('0714999999', {
+        ttl: 20000
+      }, function (error, _unlock) {
+        expect(error).to.not.exist;
+        expect(_unlock).to.exist;
+        expect(_unlock).to.be.a.Function;
+        unlock = _unlock;
+        done(error, _unlock);
+      });
+    });
+
+    it(
+      'should not be able to obtain lock if previous lock have not released',
+      function (done) {
+        wallet.lock('0714999999', {
+          ttl: 20000
+        }, function (error, _unlock) {
+          expect(error).to.exist;
+          expect(error.message).to.be.equal('Missing Wallet Lock');
+          expect(error.status).to.be.equal(400);
+          expect(_unlock).to.not.exist;
+          done();
+        });
+      });
+
+    after(function (done) {
+      unlock(done);
+    });
+
   });
 
   describe('create', function () {
