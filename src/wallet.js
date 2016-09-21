@@ -20,7 +20,7 @@ const redis = require('paywell-redis');
 const phone = require('phone');
 const shortid = require('shortid');
 const uuid = require('uuid');
-const kue = require('kue');
+// const kue = require('kue');
 
 //default receipt options
 const defaults = {
@@ -149,6 +149,28 @@ exports.key = function (phoneNumber, done) {
 
 /**
  * @function
+ * @name shortid
+ * @description generate unique shortid to be used for wallet pin and paycode
+ * @return {String|Error}             shortid or error
+ * @since 0.1.0
+ * @public
+ */
+exports.shortid = function (done) {
+  try {
+    const pin = [shortid.generate(), shortid.generate()]
+      .join('')
+      .replace(/-|_/g, '')
+      .substr(0, 8)
+      .toUpperCase();
+    done(null, pin);
+  } catch (error) {
+    done(error);
+  }
+};
+
+
+/**
+ * @function
  * @name get
  * @description get wallet(s)
  * @param  {String,String[]}   phoneNumber valid wallet phone number(s)
@@ -205,7 +227,9 @@ exports.save = exports.create = function (receipt, done) {
 
   //ensure receipt
   receipt = _.merge({}, {
-    uuid: uuid.v1()
+    pin: uuid.v1(),
+    createdAt: new Date(),
+    updatedAt: new Date()
   }, receipt);
 
   //prepare save options
@@ -290,11 +314,6 @@ exports.get = function (keys, done) {
     done(error, receipts);
   });
 
-};
-
-exports.getPin = function (phoneNumber, done) {
-  //TODO implement
-  done();
 };
 
 exports.generatePaycode = function (phoneNumber, done) {

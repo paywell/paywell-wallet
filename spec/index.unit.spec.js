@@ -49,6 +49,16 @@ describe('wallet', function () {
       });
   });
 
+  describe('shortid', function () {
+    it('should be able to generate shortid', function (done) {
+      wallet.shortid(function (error, shortid) {
+        expect(error).to.not.exist;
+        expect(shortid).to.exist;
+        done(error, shortid);
+      });
+    });
+  });
+
   describe('create', function () {
     before(function (done) {
       redis.clear(done);
