@@ -1,6 +1,10 @@
 paywell-wallet
 ================
 
+[![Build Status](https://travis-ci.org/paywell/paywell-wallet.svg?branch=master)](https://travis-ci.org/paywell/paywell-wallet)
+[![Dependency Status](https://img.shields.io/david/paywell/paywell-wallet.svg?style=flat)](https://david-dm.org/paywell/paywell-wallet)
+[![npm version](https://badge.fury.io/js/paywell-wallet.svg)](https://badge.fury.io/js/paywell-wallet
+
 virtual wallet for paywell
 
 ## Requirements
