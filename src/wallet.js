@@ -20,6 +20,7 @@ const redis = require('paywell-redis');
 const phone = require('phone');
 const shortid = require('shortid');
 const uuid = require('uuid');
+const kue = require('kue');
 
 //default receipt options
 const defaults = {

@@ -69,6 +69,14 @@ describe('wallet', function () {
     it('should be able to get multiple wallets');
   });
 
+  describe('verify', function () {
+    before(function (done) {
+      redis.clear(done);
+    });
+    it('should be able to send verification code');
+    it('should be able to accept verification to verify wallet');
+  });
+
   describe('deposit', function () {
     before(function (done) {
       redis.clear(done);
