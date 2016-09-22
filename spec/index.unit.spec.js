@@ -136,7 +136,6 @@ describe('wallet', function () {
     it('should be able to initialize wallet total transfer balance');
     it('should be able to initialize wallet total transfer count');
     it('should not be able to create same wallet in parallel/cluster');
-    it('should not be able to re-create a wallet once verified');
 
     after(function (done) {
       redis.clear(done);
@@ -166,6 +165,18 @@ describe('wallet', function () {
           expect(_wallet.verifiedAt).to.exist;
           expect(_wallet.pin).to.be.equal(pin);
           done(error, _wallet);
+        });
+      });
+
+    it(
+      'should not be able to re-create a wallet once verified',
+      function (done) {
+        wallet.create(phoneNumber, function (error, _wallet) {
+          expect(error).to.exist;
+          expect(error.message)
+            .to.contains('Wallet Already Exist');
+          expect(_wallet).to.exist;
+          done();
         });
       });
 
@@ -199,6 +210,18 @@ describe('wallet', function () {
           expect(_wallet.activatedAt).to.exist;
           expect(_wallet.pin).to.be.equal(pin);
           done(error, _wallet);
+        });
+      });
+
+    it(
+      'should not be able to re-create a wallet once activated',
+      function (done) {
+        wallet.create(phoneNumber, function (error, _wallet) {
+          expect(error).to.exist;
+          expect(error.message)
+            .to.contains('Wallet Already Exist');
+          expect(_wallet).to.exist;
+          done();
         });
       });
 
