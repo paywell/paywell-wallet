@@ -301,7 +301,7 @@ describe('wallet', function () {
   });
 
   describe('deposit', function () {
-    const amount = 200;
+    const deposit = 200;
     before(function (done) {
       redis.clear(done);
     });
@@ -315,7 +315,7 @@ describe('wallet', function () {
     it(
       'should be able to deposit cash',
       function (done) {
-        wallet.deposit({ phoneNumber, amount },
+        wallet.deposit({ phoneNumber: phoneNumber, amount: deposit },
           function (error, _wallet) {
             expect(error).to.not.exist;
             expect(_wallet).to.exist;
@@ -325,7 +325,7 @@ describe('wallet', function () {
       });
 
     it('should not be able to deposit on same wallet in parallel');
-    
+
     it('should be able to obtain wallet deposit timeline');
 
     after(function (done) {
@@ -334,10 +334,38 @@ describe('wallet', function () {
   });
 
   describe('withdraw', function () {
+    const deposit = 200;
+    const withdraw = 100;
     before(function (done) {
       redis.clear(done);
     });
-    it('should be able to withdraw cash');
+
+    before(function (done) {
+      wallet.create(phoneNumber, function (error, _wallet) {
+        done(error, _wallet);
+      });
+    });
+
+    before(function (done) {
+      wallet.deposit({ phoneNumber: phoneNumber, amount: deposit },
+        done);
+    });
+
+    it(
+      'should be able to withdraw cash',
+      function (done) {
+        wallet.deposit({ phoneNumber: phoneNumber, amount: withdraw },
+          function (error, _wallet) {
+            expect(error).to.not.exist;
+            expect(_wallet).to.exist;
+            expect(_wallet.balance).to.be.equal(300);
+            done(error, _wallet);
+          });
+      });
+
+    it(
+      'should be able to restrict withdraw that may cause balance to go below zero'
+    );
     it('should be able to obtain wallet withdraw timeline');
   });
 

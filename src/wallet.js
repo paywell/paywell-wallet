@@ -639,7 +639,7 @@ exports.verify = function (options, done) {
  *              It acquires a lock on the wallet, and defers its release until 
  *              the operation completes successfully. 
  *              
- *              In increases the wallet balance by amount using the Redis 
+ *              It increases the wallet balance by amount using the Redis 
  *              operation HINCRBYFLOAT.
  *              
  * @param  {Object}   options valid deposit details
@@ -676,7 +676,7 @@ exports.deposit = function (options, done) {
     function obtainWalletKey(options, next) {
       exports.key(options.phoneNumber, function (error, walletKey) {
         if (!!walletKey) {
-          //extend options with wallet redi key
+          //extend options with wallet redis key
           options = _.merge({}, options, { key: walletKey });
         }
         next(error, options);
@@ -696,6 +696,94 @@ exports.deposit = function (options, done) {
       //TODO update wallet deposit timeline
       const client = exports.redis.client();
       client.hincrbyfloat(options.key, 'balance', options.amount,
+        function (error /*, newBalance*/ ) {
+          next(error, options, unlock);
+        });
+    },
+
+    function releaseLockAndGetWallet(options, unlock, next) {
+      unlock(function (error) {
+        if (error) {
+          next(error);
+        } else {
+          exports.get(options.phoneNumber, next);
+        }
+      });
+    }
+  ], function (error, _wallet) {
+    done(error, _wallet);
+  });
+};
+
+
+/**
+ * @fuction
+ * @name withdraw
+ * @description withdraw a given amount from a wallet
+ *              
+ *              This operation involves the decrease in wallet balance.
+ *               
+ *              It acquires a lock on the wallet, and defers its release until 
+ *              the operation completes successfully. 
+ *              
+ *              It decreases the wallet balance by amount using the Redis 
+ *              operation HINCRBYFLOAT.
+ *              
+ * @param  {Object}   options valid withdraw details
+ * @param  {String}   options.phoneNumber valid phone number
+ * @param  {String}   options.amount amount to be withdraw. defalt to zero
+ * @param  {Function} done    a callback to invoke on success or failure
+ * @return {Object|Error}           wallet or error
+ * @since 0.10
+ * @public
+ * @see {@link http://redis.io/commands/hincrbyfloat|HINCRBYFLOAT}
+ */
+exports.withdraw = function (options, done) {
+  //TODO ensure redis cli can not update balance during deposit
+  //ensure withdraw details
+  options = _.merge({}, {
+    amount: 0
+  }, options);
+
+  async.waterfall([
+
+    function ensureValidOptions(next) {
+      const isValidWithdraw = !!options.phoneNumber &&
+        !!options.amount && options.amount >= 0;
+      if (!isValidWithdraw) {
+        let error = new Error('Invalid Withdraw');
+        error.status = 400;
+        //TODO set error code
+        next(error);
+      } else {
+        next(null, options);
+      }
+    },
+
+    function obtainWalletKey(options, next) {
+      exports.key(options.phoneNumber, function (error, walletKey) {
+        if (!!walletKey) {
+          //extend options with wallet redis key
+          options = _.merge({}, options, { key: walletKey });
+        }
+        next(error, options);
+      });
+    },
+
+    //TODO ensure wallet exists
+    //TODO ensure balance will not go below zero
+
+    function obtainWalletLock(options, next) {
+      exports.lock(options.phoneNumber, function (error, unlock) {
+        next(error, options, unlock);
+      });
+    },
+
+    function decrementWalletBalance(options, unlock, next) {
+      //update wallet balance
+      //TODO update wallet withdraw timeline
+      const client = exports.redis.client();
+      client.hincrbyfloat(options.key, 'balance', -options.amount,
         function (error /*, newBalance*/ ) {
           next(error, options, unlock);
         });
