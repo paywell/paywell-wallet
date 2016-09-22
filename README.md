@@ -36,7 +36,7 @@ wallet.deposit({phoneNumber,amount},done);
 wallet.withdraw({phoneNumber,amount},done);
 ```
 
-## Structure
+## Wallet Structure
 ```js
 {
     phoneNumber:String, //in E.164 format
