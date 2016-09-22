@@ -163,10 +163,13 @@ describe('wallet', function () {
         wallet.verify({ phoneNumber, pin }, function (error, _wallet) {
           expect(error).to.not.exist;
           expect(_wallet).to.exist;
+          expect(_wallet.verifiedAt).to.exist;
           expect(_wallet.pin).to.be.equal(pin);
           done(error, _wallet);
         });
       });
+
+    it('should not be able to verify wallet more than once');
 
     after(function (done) {
       redis.clear(done);
@@ -175,7 +178,35 @@ describe('wallet', function () {
   });
 
   describe('activate', function () {
-    it('should be able to activate wallet');
+    let pin;
+    before(function (done) {
+      redis.clear(done);
+    });
+
+    before(function (done) {
+      wallet.create(phoneNumber, function (error, _wallet) {
+        pin = _wallet.pin;
+        done(error, _wallet);
+      });
+    });
+
+    it(
+      'should be able to activate wallet',
+      function (done) {
+        wallet.activate({ phoneNumber }, function (error, _wallet) {
+          expect(error).to.not.exist;
+          expect(_wallet).to.exist;
+          expect(_wallet.activatedAt).to.exist;
+          expect(_wallet.pin).to.be.equal(pin);
+          done(error, _wallet);
+        });
+      });
+
+    it('should not be able to activate wallet more than once');
+
+    after(function (done) {
+      redis.clear(done);
+    });
   });
 
 
