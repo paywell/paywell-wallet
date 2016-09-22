@@ -136,6 +136,7 @@ describe('wallet', function () {
     it('should be able to initialize wallet total transfer balance');
     it('should be able to initialize wallet total transfer count');
     it('should not be able to create same wallet in parallel/cluster');
+    it('should not be able to re-create a wallet once verified');
 
     after(function (done) {
       redis.clear(done);
