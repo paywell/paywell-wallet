@@ -252,6 +252,31 @@ describe('wallet', function () {
     });
   });
 
+  describe('get', function () {
+    before(function (done) {
+      redis.clear(done);
+    });
+
+    before(function (done) {
+      wallet.create(phoneNumber, function (error, _wallet) {
+        done(error, _wallet);
+      });
+    });
+
+    it(
+      'should be able to get a wallet',
+      function (done) {
+        wallet.get(phoneNumber, function (error, _wallet) {
+          expect(error).to.not.exist;
+          expect(_wallet).to.exist;
+          done(error, _wallet);
+        });
+      });
+
+    after(function (done) {
+      redis.clear(done);
+    });
+  });
 
   describe('search', function () {
     before(function (done) {
@@ -263,7 +288,7 @@ describe('wallet', function () {
     });
 
     it('update reds to allow number search');
-    
+
     it('should be able to search for a wallet');
 
     it(
