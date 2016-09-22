@@ -366,7 +366,9 @@ exports.create = function (phoneNumber, done) {
     function ensureNotExists(next) {
       exports.get(phoneNumber, function (error, wallet) {
         //ensure wallet not exist
-        const alreadyExist = !!wallet && !!wallet.activatedAt;
+        //TODO add discussion about this verification
+        const alreadyExist = !!wallet &&
+          (!!wallet.activatedAt || !!wallet.verifiedAt);
         if (alreadyExist) {
           error = new Error('Wallet Already Exist ' + phoneNumber);
           error.status = 400;
@@ -377,11 +379,12 @@ exports.create = function (phoneNumber, done) {
     },
 
     function ensureDefaults(wallet, next) {
+      const today = new Date();
       wallet = _.merge({}, {
         balance: 0,
         phoneNumber: phoneNumber,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: today,
+        updatedAt: today
       });
       next(null, wallet);
     },
