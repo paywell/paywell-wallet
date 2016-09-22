@@ -661,59 +661,65 @@ exports.deposit = function (options, done) {
 
   async.waterfall([
 
-    function ensureValidOptions(next) {
-      const isValidDeposit = !!options.phoneNumber &&
-        !!options.amount && options.amount >= 0;
-      if (!isValidDeposit) {
-        let error = new Error('Invalid Deposit');
-        error.status = 400;
-        //TODO set error code
-        next(error);
-      } else {
-        next(null, options);
-      }
-    },
-
-    function obtainWalletKey(options, next) {
-      exports.key(options.phoneNumber, function (error, walletKey) {
-        if (!!walletKey) {
-          //extend options with wallet redis key
-          options = _.merge({}, options, { key: walletKey });
-        }
-        next(error, options);
-      });
-    },
-
-    //TODO ensure wallet exists
-
-    function obtainWalletLock(options, next) {
-      exports.lock(options.phoneNumber, function (error, unlock) {
-        next(error, options, unlock);
-      });
-    },
-
-    function incrementWalletBalance(options, unlock, next) {
-      //update wallet balance
-      //TODO update wallet deposit timeline
-      const client = exports.redis.client();
-      client.hincrbyfloat(options.key, 'balance', options.amount,
-        function (error /*, newBalance*/ ) {
-          next(error, options, unlock);
-        });
-    },
-
-    function releaseLockAndGetWallet(options, unlock, next) {
-      unlock(function (error) {
-        if (error) {
+      function ensureValidOptions(next) {
+        const isValidDeposit = !!options.phoneNumber &&
+          !!options.amount && options.amount >= 0;
+        if (!isValidDeposit) {
+          let error = new Error('Invalid Deposit');
+          error.status = 400;
+          //TODO set error code
           next(error);
         } else {
-          exports.get(options.phoneNumber, next);
+          next(null, options);
         }
-      });
-    }
-  ], function (error, _wallet) {
-    done(error, _wallet);
-  });
+      },
+
+      function getWallet(options, next) {
+        exports.get(options.phoneNumber, function (error, _wallet) {
+
+          const isValidWallet = !!_wallet &&
+            _.keys(_wallet).length > 0;
+
+          if (!isValidWallet) {
+            let error = new Error('Invalid Wallet');
+            error.status = 400;
+            //TODO set error code
+            next(error);
+          } else {
+            next(null, _wallet, options);
+          }
+        });
+      },
+
+      function obtainWalletLock(_wallet, options, next) {
+        exports.lock(options.phoneNumber, function (error, unlock) {
+          next(error, _wallet, options, unlock);
+        });
+      },
+
+      function incrementWalletBalance(_wallet, options, unlock, next) {
+        //update wallet balance
+        //TODO update wallet deposit timeline
+        const client = exports.redis.client();
+        client.hincrbyfloat(_wallet._id, 'balance', options.amount,
+          function (error /*, newBalance*/ ) {
+            next(error, options, unlock);
+          });
+      },
+
+      function releaseLockAndGetWallet(options, unlock, next) {
+        unlock(function (error) {
+          if (error) {
+            next(error);
+          } else {
+            exports.get(options.phoneNumber, next);
+          }
+        });
+      }
+    ],
+    function (error, _wallet) {
+      done(error, _wallet);
+    });
 };
 
 
@@ -762,13 +768,11 @@ exports.withdraw = function (options, done) {
       }
     },
 
-    //TODO ensure wallet exists
-    //TODO ensure balance will not go below zero
     function getWallet(options, next) {
       exports.get(options.phoneNumber, function (error, _wallet) {
 
         const isValidWallet = !!_wallet &&
-          _.keys(_wallet).length >= 0;
+          _.keys(_wallet).length > 0;
 
         const canDeduct = isValidWallet &&
           (_wallet.balance - options.amount) >= 0;
