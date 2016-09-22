@@ -509,9 +509,18 @@ exports.activate = function (options, done) {
     function activateWallet(_wallet, options, next) {
       //check wallet for validity
       const isValidWallet = !!_wallet && _.keys(_wallet).length > 0;
+      const isAlreadyActivated = isValidWallet && !!_wallet.activatedAt;
+
+      //if already activate throw alredy activated
+      if (isAlreadyActivated) {
+        let error = new Error('Wallet Already Activated');
+        error.status = 400;
+        //TODO add error code
+        next(error, _wallet);
+      }
 
       //activate wallet
-      if (isValidWallet) {
+      else if (isValidWallet && !isAlreadyActivated) {
         const today = new Date();
         _wallet = _.merge({}, _wallet, {
           activatedAt: today,
@@ -577,9 +586,18 @@ exports.verify = function (options, done) {
     function verifyPin(_wallet, options, next) {
       const isValidPin = !!_wallet && !!_wallet.pin &&
         _wallet.pin === options.pin;
+      const isAlreadyVerified = isValidPin && !!_wallet.verifiedAt;
+
+      //if already verified throw already verified
+      if (isAlreadyVerified) {
+        let error = new Error('Wallet Already Verified');
+        error.status = 400;
+        //TODO add error code
+        next(error, _wallet);
+      }
 
       //verify wallet
-      if (isValidPin) {
+      else if (isValidPin && !isAlreadyVerified) {
         const today = new Date();
         _wallet = _.merge({}, _wallet, {
           verifiedAt: today,

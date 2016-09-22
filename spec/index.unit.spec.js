@@ -180,7 +180,17 @@ describe('wallet', function () {
         });
       });
 
-    it('should not be able to verify wallet more than once');
+    it(
+      'should not be able to verify wallet more than once',
+      function (done) {
+        wallet.verify({ phoneNumber, pin }, function (error, _wallet) {
+          expect(error).to.exist;
+          expect(error.message)
+            .to.contains('Wallet Already Verified');
+          expect(_wallet).to.exist;
+          done();
+        });
+      });
 
     after(function (done) {
       redis.clear(done);
@@ -225,7 +235,17 @@ describe('wallet', function () {
         });
       });
 
-    it('should not be able to activate wallet more than once');
+    it(
+      'should not be able to activate wallet more than once',
+      function (done) {
+        wallet.activate({ phoneNumber }, function (error, _wallet) {
+          expect(error).to.exist;
+          expect(error.message)
+            .to.contains('Wallet Already Activated');
+          expect(_wallet).to.exist;
+          done();
+        });
+      });
 
     after(function (done) {
       redis.clear(done);
