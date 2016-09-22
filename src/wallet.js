@@ -323,6 +323,7 @@ exports.get = function (phoneNumber, done) {
 
 exports.save = function (wallet, done) {
   //TODO ensure _id exists
+  //TODO obtain save lock
 
   //prepare save options
   const options = {
@@ -360,6 +361,8 @@ exports.save = function (wallet, done) {
  */
 exports.create = function (phoneNumber, done) {
   //TODO ensure paywell-redis index wallet in background
+  //TODO obtain wallet creation lock to prevent wallet of 
+  //same phone number being create parallel
 
   async.waterfall([
 
