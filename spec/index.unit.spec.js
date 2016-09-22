@@ -301,11 +301,36 @@ describe('wallet', function () {
   });
 
   describe('deposit', function () {
+    const amount = 200;
     before(function (done) {
       redis.clear(done);
     });
-    it('should be able to deposit cash');
+
+    before(function (done) {
+      wallet.create(phoneNumber, function (error, _wallet) {
+        done(error, _wallet);
+      });
+    });
+
+    it(
+      'should be able to deposit cash',
+      function (done) {
+        wallet.deposit({ phoneNumber, amount },
+          function (error, _wallet) {
+            expect(error).to.not.exist;
+            expect(_wallet).to.exist;
+            expect(_wallet.balance).to.be.equal(200);
+            done(error, _wallet);
+          });
+      });
+
+    it('should not be able to deposit on same wallet in parallel');
+    
     it('should be able to obtain wallet deposit timeline');
+
+    after(function (done) {
+      redis.clear(done);
+    });
   });
 
   describe('withdraw', function () {

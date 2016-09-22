@@ -321,6 +321,16 @@ exports.get = function (phoneNumber, done) {
 };
 
 
+/**
+ * @function
+ * @name save
+ * @description update existing wallet
+ * @param  {Object}   wallet valid paywell wallet
+ * @param  {Function} done   a callback to invoke on success or failure
+ * @return {Object}          wallet or error
+ * @since 0.1.0
+ * @public
+ */
 exports.save = function (wallet, done) {
   //TODO ensure _id exists
   //TODO obtain save lock
@@ -613,6 +623,93 @@ exports.verify = function (options, done) {
       }
     }
 
+  ], function (error, _wallet) {
+    done(error, _wallet);
+  });
+};
+
+
+/**
+ * @fuction
+ * @name deposit
+ * @description deposit a given amount to a wallet
+ *              
+ *              This operation involves the increase in wallet balance.
+ *               
+ *              It acquires a lock on the wallet, and defers its release until 
+ *              the operation completes successfully. 
+ *              
+ *              In increases the wallet balance by amount using the Redis 
+ *              operation HINCRBYFLOAT.
+ *              
+ * @param  {Object}   options valid deposit details
+ * @param  {String}   options.phoneNumber valid phone number
+ * @param  {String}   options.amount amount to be deposited. defalt to zero
+ * @param  {Function} done    a callback to invoke on success or failure
+ * @return {Object|Error}           wallet or error
+ * @since 0.10
+ * @public
+ * @see {@link http://redis.io/commands/hincrbyfloat|HINCRBYFLOAT}
+ */
+exports.deposit = function (options, done) {
+  //TODO ensure redis cli can not update balance during deposit
+  //ensure deposit details
+  options = _.merge({}, {
+    amount: 0
+  }, options);
+
+  async.waterfall([
+
+    function ensureValidOptions(next) {
+      const isValidDeposit = !!options.phoneNumber &&
+        !!options.amount && options.amount >= 0;
+      if (!isValidDeposit) {
+        let error = new Error('Invalid Deposit');
+        error.status = 400;
+        //TODO set error code
+        next(error);
+      } else {
+        next(null, options);
+      }
+    },
+
+    function obtainWalletKey(options, next) {
+      exports.key(options.phoneNumber, function (error, walletKey) {
+        if (!!walletKey) {
+          //extend options with wallet redi key
+          options = _.merge({}, options, { key: walletKey });
+        }
+        next(error, options);
+      });
+    },
+
+    //TODO ensure wallet exists
+
+    function obtainWalletLock(options, next) {
+      exports.lock(options.phoneNumber, function (error, unlock) {
+        next(error, options, unlock);
+      });
+    },
+
+    function incrementWalletBalance(options, unlock, next) {
+      //update wallet balance
+      //TODO update wallet deposit timeline
+      const client = exports.redis.client();
+      client.hincrbyfloat(options.key, 'balance', options.amount,
+        function (error /*, newBalance*/ ) {
+          next(error, options, unlock);
+        });
+    },
+
+    function releaseLockAndGetWallet(options, unlock, next) {
+      unlock(function (error) {
+        if (error) {
+          next(error);
+        } else {
+          exports.get(options.phoneNumber, next);
+        }
+      });
+    }
   ], function (error, _wallet) {
     done(error, _wallet);
   });
