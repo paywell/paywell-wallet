@@ -257,9 +257,22 @@ describe('wallet', function () {
     before(function (done) {
       redis.clear(done);
     });
+
+    before(function (done) {
+      wallet.create(phoneNumber, done);
+    });
+
+    it('update reds to allow number search');
+    
+    it('should be able to search for a wallet');
+
     it(
       'should be able to index wallet using reds atomically during save'
     );
+
+    after(function (done) {
+      redis.clear(done);
+    });
   });
 
   describe('deposit', function () {
