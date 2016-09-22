@@ -376,6 +376,9 @@ describe('wallet', function () {
       }
     );
 
+    it('should not be able to withdraw on same wallet in parallel');
+
+
     it('should be able to obtain wallet withdraw timeline');
 
     after(function (done) {
