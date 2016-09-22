@@ -354,19 +354,33 @@ describe('wallet', function () {
     it(
       'should be able to withdraw cash',
       function (done) {
-        wallet.deposit({ phoneNumber: phoneNumber, amount: withdraw },
+        wallet.withdraw({ phoneNumber: phoneNumber, amount: withdraw },
           function (error, _wallet) {
             expect(error).to.not.exist;
             expect(_wallet).to.exist;
-            expect(_wallet.balance).to.be.equal(300);
+            expect(_wallet.balance).to.be.equal(100);
             done(error, _wallet);
           });
       });
 
     it(
-      'should be able to restrict withdraw that may cause balance to go below zero'
+      'should be able to restrict withdraw that may cause balance to go below zero',
+      function (done) {
+        wallet.withdraw({ phoneNumber: phoneNumber, amount: 400 },
+          function (error, _wallet) {
+            expect(error).to.exist;
+            expect(_wallet).to.not.exist;
+            expect(error.message).to.contains('Balance Overflow');
+            done();
+          });
+      }
     );
+
     it('should be able to obtain wallet withdraw timeline');
+
+    after(function (done) {
+      redis.clear(done);
+    });
   });
 
   describe('transfer', function () {

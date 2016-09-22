@@ -762,30 +762,50 @@ exports.withdraw = function (options, done) {
       }
     },
 
-    function obtainWalletKey(options, next) {
-      exports.key(options.phoneNumber, function (error, walletKey) {
-        if (!!walletKey) {
-          //extend options with wallet redis key
-          options = _.merge({}, options, { key: walletKey });
-        }
-        next(error, options);
-      });
-    },
-
     //TODO ensure wallet exists
     //TODO ensure balance will not go below zero
+    function getWallet(options, next) {
+      exports.get(options.phoneNumber, function (error, _wallet) {
 
-    function obtainWalletLock(options, next) {
-      exports.lock(options.phoneNumber, function (error, unlock) {
-        next(error, options, unlock);
+        const isValidWallet = !!_wallet &&
+          _.keys(_wallet).length >= 0;
+
+        const canDeduct = isValidWallet &&
+          (_wallet.balance - options.amount) >= 0;
+
+        if (!isValidWallet) {
+          let error = new Error('Invalid Wallet');
+          error.status = 400;
+          //TODO set error code
+          next(error);
+        }
+
+        //check if deduction will lead to negative balance
+        else if (!canDeduct) {
+          let error = new Error('Balance Overflow');
+          error.status = 400;
+          //TODO set error code
+          next(error);
+        }
+
+        //continue with deduction
+        else {
+          next(error, _wallet, options);
+        }
       });
     },
 
-    function decrementWalletBalance(options, unlock, next) {
+    function obtainWalletLock(_wallet, options, next) {
+      exports.lock(options.phoneNumber, function (error, unlock) {
+        next(error, _wallet, options, unlock);
+      });
+    },
+
+    function decrementWalletBalance(_wallet, options, unlock, next) {
       //update wallet balance
       //TODO update wallet withdraw timeline
       const client = exports.redis.client();
-      client.hincrbyfloat(options.key, 'balance', -options.amount,
+      client.hincrbyfloat(_wallet._id, 'balance', -options.amount,
         function (error /*, newBalance*/ ) {
           next(error, options, unlock);
         });
