@@ -16,6 +16,26 @@ virtual wallet for paywell
 $ npm install --save paywell-wallet
 ```
 
+## Usage
+```js
+const wallet = require('paywell-wallet')([options]);
+
+//create wallet
+wallet.create(phoneNumber,done);
+
+//wallet save&update
+wallet.save(wallet,done);
+
+//get wallet
+wallet.get(phoneNumber,done);
+
+//wallet deposit
+wallet.deposit({phoneNumber,amount},done);
+
+//wallet withdraw
+wallet.withdraw({phoneNumber,amount},done);
+```
+
 ## Structure
 ```js
 {

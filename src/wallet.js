@@ -652,6 +652,7 @@ exports.verify = function (options, done) {
  * @see {@link http://redis.io/commands/hincrbyfloat|HINCRBYFLOAT}
  */
 exports.deposit = function (options, done) {
+  //TODO ensure deposit code
   //TODO ensure redis cli can not update balance during deposit
   //ensure deposit details
   options = _.merge({}, {
@@ -739,6 +740,7 @@ exports.deposit = function (options, done) {
  * @see {@link http://redis.io/commands/hincrbyfloat|HINCRBYFLOAT}
  */
 exports.withdraw = function (options, done) {
+  //TODO ensure withdraw code
   //TODO ensure redis cli can not update balance during deposit
   //ensure withdraw details
   options = _.merge({}, {
