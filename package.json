@@ -1,6 +1,6 @@
 {
   "name": "paywell-wallet",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "virtual wallet for paywell",
   "main": "index.js",
   "scripts": {
