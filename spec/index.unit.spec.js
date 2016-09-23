@@ -157,6 +157,12 @@ describe('wallet', function () {
     });
   });
 
+  describe('recover', function () {
+    it('should be able to recoever using same wallet phone number');
+    it('should be able to add second number in case of theft or lost');
+    it('should be able to recoever using wallet second phone number');
+  });
+
   describe('verify', function () {
     let pin;
     before(function (done) {
