@@ -398,7 +398,7 @@ exports.create = function (phoneNumber, done) {
         phoneNumber: phoneNumber,
         createdAt: today,
         updatedAt: today
-      });
+      }, wallet);
       next(null, wallet);
     },
 
@@ -560,7 +560,7 @@ exports.activate = function (options, done) {
  *              This must me done by sending sms to a phone number with a pin
  *              that owner of a number can use to activate the wallet.
  *
- * 				This process is not mandatory based on type of deployment.
+ *        This process is not mandatory based on type of deployment.
  *              
  * @param  {String}   options.phoneNumber  verify given wallet using its pin
  * @param  {String}   options.pin  wallet pin code
