@@ -31,6 +31,30 @@ describe('wallet', function () {
           done(error, _phoneNumber);
         });
       });
+
+    it(
+      'should be able to convert phone number into E.164 format',
+      function (done) {
+        wallet.toE164('255714999999', function (error, _phoneNumber) {
+          expect(error).to.not.exist;
+          expect(_phoneNumber).to.exist;
+          expect(_.startsWith(_phoneNumber, '+255')).to.be.true;
+          expect(_phoneNumber).to.contains('714999999');
+          done(error, _phoneNumber);
+        });
+      });
+
+    it(
+      'should be able to convert phone number into E.164 format',
+      function (done) {
+        wallet.toE164('+255714999999', function (error, _phoneNumber) {
+          expect(error).to.not.exist;
+          expect(_phoneNumber).to.exist;
+          expect(_.startsWith(_phoneNumber, '+255')).to.be.true;
+          expect(_phoneNumber).to.contains('714999999');
+          done(error, _phoneNumber);
+        });
+      });
   });
 
   describe('key', function () {
@@ -355,7 +379,7 @@ describe('wallet', function () {
   });
 
   describe('withdraw', function () {
-    const deposit = 200;
+    const deposit = 300;
     const withdraw = 100;
     before(function (done) {
       redis.clear(done);
@@ -376,6 +400,18 @@ describe('wallet', function () {
       'should be able to withdraw cash',
       function (done) {
         wallet.withdraw({ phoneNumber: phoneNumber, amount: withdraw },
+          function (error, _wallet) {
+            expect(error).to.not.exist;
+            expect(_wallet).to.exist;
+            expect(_wallet.balance).to.be.equal(200);
+            done(error, _wallet);
+          });
+      });
+
+    it(
+      'should be able to withdraw cash',
+      function (done) {
+        wallet.withdraw({ phoneNumber: '255714999999', amount: withdraw },
           function (error, _wallet) {
             expect(error).to.not.exist;
             expect(_wallet).to.exist;

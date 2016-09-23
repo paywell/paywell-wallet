@@ -116,7 +116,7 @@ exports.deserialize = function (wallet) {
  * @param  {String} phoneNumber valid phone number
  * @param  {Object} [options] convertion options
  * @param  {String} [options.country] valid alpha2 country code. default to
- *                                    TZS(Tanzania)
+ *                                    TZ(Tanzania)
  * @param  {Function} done a callback to invoke on success or failure
  * @return {String}             phone number in E.164 format or null
  * @since 0.1.0
