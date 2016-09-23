@@ -137,6 +137,7 @@ exports.toE164 = function (phoneNumber, options, done) {
 
   //convert number to E.164
   try {
+    phoneNumber = String(phoneNumber);
     const parts = phone(phoneNumber, options.country);
     const isValidPhoneNumber = !parts || parts.length !== 0;
 

@@ -35,6 +35,18 @@ describe('wallet', function () {
     it(
       'should be able to convert phone number into E.164 format',
       function (done) {
+        wallet.toE164(255714999999, function (error, _phoneNumber) {
+          expect(error).to.not.exist;
+          expect(_phoneNumber).to.exist;
+          expect(_.startsWith(_phoneNumber, '+255')).to.be.true;
+          expect(_phoneNumber).to.contains('714999999');
+          done(error, _phoneNumber);
+        });
+      });
+
+    it(
+      'should be able to convert phone number into E.164 format',
+      function (done) {
         wallet.toE164('255714999999', function (error, _phoneNumber) {
           expect(error).to.not.exist;
           expect(_phoneNumber).to.exist;
