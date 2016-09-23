@@ -395,10 +395,11 @@ exports.create = function (phoneNumber, done) {
       const today = new Date();
       wallet = _.merge({}, {
         balance: 0,
-        phoneNumber: phoneNumber,
         createdAt: today,
         updatedAt: today
-      }, wallet);
+      }, wallet, {
+        phoneNumber: phoneNumber,
+      });
       next(null, wallet);
     },
 

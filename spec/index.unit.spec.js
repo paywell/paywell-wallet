@@ -129,6 +129,21 @@ describe('wallet', function () {
         expect(newWallet.balance).to.be.equal(0);
       });
 
+    it(
+      'should be able to re-create wallet if not verified',
+      function (done) {
+        wallet.create(phoneNumber, function (error, _wallet) {
+          expect(error).to.not.exist;
+          expect(_wallet).to.exist;
+          expect(_wallet.phoneNumber).to.exist;
+          expect(_wallet.pin).to.exist;
+          expect(_wallet.createdAt).to.exist;
+          expect(_wallet.updatedAt).to.exist;
+          newWallet = _wallet;
+          done(error, _wallet);
+        });
+      });
+
     it('should be able to initialize wallet total deposit amount');
     it('should be able to initialize wallet total deposit count');
     it('should be able to initialize wallet total withdraw amount');
